@@ -1,0 +1,74 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1778758223065,
+  "projectRoot": "/mnt/c/vault/obsidian-mcp",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "npm run build 2>&1",
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {},
+  "hotPaths": [
+    {
+      "path": ".env",
+      "accessCount": 1,
+      "lastAccessed": 1778759213115,
+      "type": "file"
+    },
+    {
+      "path": "package.json",
+      "accessCount": 1,
+      "lastAccessed": 1778759298693,
+      "type": "file"
+    },
+    {
+      "path": "tsconfig.json",
+      "accessCount": 1,
+      "lastAccessed": 1778759303789,
+      "type": "file"
+    },
+    {
+      "path": "src/auth.ts",
+      "accessCount": 1,
+      "lastAccessed": 1778759444471,
+      "type": "file"
+    },
+    {
+      "path": "src/tools/files.ts",
+      "accessCount": 1,
+      "lastAccessed": 1778759518934,
+      "type": "file"
+    },
+    {
+      "path": "src/index.ts",
+      "accessCount": 1,
+      "lastAccessed": 1778759558360,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
