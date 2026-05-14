@@ -141,7 +141,6 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
-<<<<<<< HEAD
 
 # Security & bloat
 .env
@@ -155,9 +154,3 @@ build/
 *.log
 .DS_Store
 .omc/
-=======
-.omc/
-dist/
-node_modules/
-.env
->>>>>>> vaults
