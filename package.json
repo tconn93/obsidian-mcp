@@ -1,13 +1,13 @@
 {
   "name": "obsidian-mcp",
   "version": "1.0.0",
-  "description": "MCP server providing file system and shell/process management tools",
+  "description": "MCP server providing Obsidian vault file management tools",
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "node --loader ts-node/esm src/index.ts",
+    "dev": "node --import 'data:text/javascript,import { register } from \"node:module\"; import { pathToFileURL } from \"node:url\"; register(\"ts-node/esm\", pathToFileURL(\"./\"));' src/index.ts",
     "watch": "tsc --watch"
   },
   "dependencies": {

@@ -34,39 +34,45 @@
   "directoryMap": {},
   "hotPaths": [
     {
+      "path": "src/tools/files.ts",
+      "accessCount": 10,
+      "lastAccessed": 1778768742779,
+      "type": "file"
+    },
+    {
+      "path": "src/index.ts",
+      "accessCount": 6,
+      "lastAccessed": 1778768215468,
+      "type": "file"
+    },
+    {
       "path": ".env",
-      "accessCount": 1,
-      "lastAccessed": 1778759213115,
+      "accessCount": 6,
+      "lastAccessed": 1778768746879,
       "type": "file"
     },
     {
       "path": "package.json",
-      "accessCount": 1,
-      "lastAccessed": 1778759298693,
+      "accessCount": 5,
+      "lastAccessed": 1778768745707,
+      "type": "file"
+    },
+    {
+      "path": "src/auth.ts",
+      "accessCount": 2,
+      "lastAccessed": 1778768744440,
+      "type": "file"
+    },
+    {
+      "path": "README.md",
+      "accessCount": 2,
+      "lastAccessed": 1778768798037,
       "type": "file"
     },
     {
       "path": "tsconfig.json",
       "accessCount": 1,
       "lastAccessed": 1778759303789,
-      "type": "file"
-    },
-    {
-      "path": "src/auth.ts",
-      "accessCount": 1,
-      "lastAccessed": 1778759444471,
-      "type": "file"
-    },
-    {
-      "path": "src/tools/files.ts",
-      "accessCount": 1,
-      "lastAccessed": 1778759518934,
-      "type": "file"
-    },
-    {
-      "path": "src/index.ts",
-      "accessCount": 1,
-      "lastAccessed": 1778759558360,
       "type": "file"
     }
   ],
