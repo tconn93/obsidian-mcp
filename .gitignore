@@ -141,3 +141,16 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Security & bloat
+.env
+.env.local
+.env.*.local
+node_modules/
+dist/
+build/
+.next/
+.output/
+*.log
+.DS_Store
+.omc/
