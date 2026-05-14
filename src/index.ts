@@ -190,6 +190,16 @@ if (useStdio) {
     console.error(`[obsidian-mcp]   Stdio mode: node dist/index.js --stdio`);
   });
 
+  // Prevent Node from killing idle SSE streams (default keepAliveTimeout is 5s)
+  httpServer.keepAliveTimeout = 300_000;
+  httpServer.headersTimeout = 310_000;
+
+  // Handle client socket errors without crashing
+  httpServer.on("clientError", (err, socket) => {
+    console.error(`[obsidian-mcp] Client error: ${err.message}`);
+    if (!socket.destroyed) socket.destroy();
+  });
+
   for (const sig of ["SIGTERM", "SIGINT"] as const) {
     process.on(sig, () => {
       console.error("[obsidian-mcp] Shutting down...");

@@ -86,6 +86,29 @@ export const fileToolDefs: Tool[] = [
     },
   },
   {
+    name: "search_vault",
+    description: "Search all files in a vault for a pattern. Returns {vaultName: matching_content} or {} if no matches.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        vaultName: { type: "string", description: "Name of the vault to search" },
+        query: { type: "string", description: "Search pattern (regex supported)" },
+      },
+      required: ["vaultName", "query"],
+    },
+  },
+  {
+    name: "search_all_vaults",
+    description: "Search all vaults for a pattern. Returns {vaultName: matching_content, ...} for each vault with hits. Returns {} if no matches.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Search pattern (regex supported)" },
+      },
+      required: ["query"],
+    },
+  },
+  {
     name: "get_file_contents",
     description: "Read the contents of a file in a vault",
     inputSchema: {
@@ -240,6 +263,64 @@ export async function handleFileTool(
         if (e.code === 1 || e.code === 2) return "(no matches)";
         throw err;
       }
+    }
+
+    case "search_vault": {
+      const vaultName = args.vaultName as string;
+      const vp = await vaultPath(vaultName);
+      const query = (args.query as string).replace(/'/g, "'\\''");
+      try {
+        const { stdout } = await execAsync(
+          `grep -rn -e '${query}' '${vp}' --exclude-dir=.obsidian --exclude-dir=.git 2>/dev/null`,
+          { timeout: 30_000 }
+        );
+        const prefixLen = vp.length + 1;
+        const result = stdout
+          .split("\n")
+          .filter(Boolean)
+          .map((line) => line.slice(prefixLen))
+          .join("\n");
+        return result ? JSON.stringify({ [vaultName]: result }, null, 2) : "{}";
+      } catch (err: unknown) {
+        const e = err as { code?: number };
+        if (e.code === 1 || e.code === 2) return "{}";
+        throw err;
+      }
+    }
+
+    case "search_all_vaults": {
+      const base = requireVaultDir();
+      const query = (args.query as string).replace(/'/g, "'\\''");
+      const entries = await fs.readdir(base, { withFileTypes: true });
+      const result: Record<string, string> = {};
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+        try {
+          const obsidianDir = path.join(base, entry.name, ".obsidian");
+          const stat = await fs.stat(obsidianDir);
+          if (!stat.isDirectory()) continue;
+        } catch {
+          continue;
+        }
+        const vp = path.join(base, entry.name);
+        try {
+          const { stdout } = await execAsync(
+            `grep -rn -e '${query}' '${vp}' --exclude-dir=.obsidian --exclude-dir=.git 2>/dev/null`,
+            { timeout: 30_000 }
+          );
+          const prefixLen = vp.length + 1;
+          const content = stdout
+            .split("\n")
+            .filter(Boolean)
+            .map((line) => line.slice(prefixLen))
+            .join("\n");
+          if (content) result[entry.name] = content;
+        } catch (err: unknown) {
+          const e = err as { code?: number };
+          if (e.code !== 1 && e.code !== 2) throw err;
+        }
+      }
+      return JSON.stringify(result, null, 2);
     }
 
     case "get_file_contents": {
