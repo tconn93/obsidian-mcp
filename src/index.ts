@@ -4,9 +4,38 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import http from "http";
 import { randomUUID } from "crypto";
+import * as fs from "fs";
+import * as path from "path";
+import { fileURLToPath } from "url";
 import { authorised, handleMetadata } from "./auth.js";
 
 import { fileToolDefs, handleFileTool } from "./tools/files.js";
+
+// Load .env from project root (needed for stdio mode)
+function loadEnv(): void {
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const candidates = [
+    path.resolve(__dirname, "../.env"),
+    path.resolve(__dirname, "../../.env"),
+  ];
+  for (const envPath of candidates) {
+    try {
+      const content = fs.readFileSync(envPath, "utf8");
+      for (const line of content.split("\n")) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) continue;
+        const eqIdx = trimmed.indexOf("=");
+        if (eqIdx === -1) continue;
+        const key = trimmed.slice(0, eqIdx).trim();
+        const value = trimmed.slice(eqIdx + 1).trim();
+        if (!process.env[key]) process.env[key] = value;
+      }
+    } catch {
+      // .env not found at this path — try next
+    }
+  }
+}
+loadEnv();
 
 const allTools = [...fileToolDefs];
 
@@ -51,7 +80,23 @@ if (useStdio) {
 
   const sessions = new Map<string, StreamableHTTPServerTransport>();
 
+  function forgetTransport(transport: StreamableHTTPServerTransport): void {
+    const sid = transport.sessionId;
+    if (sid) {
+      sessions.delete(sid);
+      console.error(`[obsidian-mcp] Session removed: ${sid} | active: ${sessions.size}`);
+    }
+  }
+
   const httpServer = http.createServer(async (req, res) => {
+    // Handle connection drops without crashing
+    req.on("error", (err) => {
+      console.error(`[obsidian-mcp] Request error: ${err.message}`);
+    });
+    res.on("error", (err) => {
+      console.error(`[obsidian-mcp] Response error: ${err.message}`);
+    });
+
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, mcp-session-id, Authorization");
@@ -90,7 +135,16 @@ if (useStdio) {
           res.end(JSON.stringify({ error: `Session not found: ${sessionId}` }));
           return;
         }
-        await transport.handleRequest(req, res);
+        try {
+          await transport.handleRequest(req, res);
+        } catch (err) {
+          console.error(`[obsidian-mcp] Session error: ${sessionId} — removing`);
+          forgetTransport(transport);
+          if (!res.headersSent) {
+            res.writeHead(500, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: "Session error — reconnect required" }));
+          }
+        }
         return;
       }
 
@@ -105,11 +159,12 @@ if (useStdio) {
       });
 
       transport.onclose = () => {
-        const sid = transport.sessionId;
-        if (sid) {
-          sessions.delete(sid);
-          console.error(`[obsidian-mcp] Session closed: ${sid} | active: ${sessions.size}`);
-        }
+        forgetTransport(transport);
+      };
+
+      transport.onerror = (err) => {
+        console.error(`[obsidian-mcp] Transport error: ${err.message}`);
+        forgetTransport(transport);
       };
 
       const server = makeServer();
