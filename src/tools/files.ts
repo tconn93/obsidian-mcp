@@ -11,6 +11,16 @@ function decodeContent(content: string): string {
   return he.decode(content);
 }
 
+async function syncVault(vaultPath: string): Promise<void> {
+  try {
+    await execAsync("ob sync", { cwd: vaultPath, timeout: 30_000 });
+    console.error(`[obsidian-mcp] Synced vault: ${vaultPath}`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[obsidian-mcp] Sync warning (vault: ${vaultPath}): ${msg}`);
+  }
+}
+
 function requireVaultDir(): string {
   const dir = process.env.VAULT_DIR_PATH;
   if (!dir) throw new Error("VAULT_DIR_PATH is not configured");
@@ -333,6 +343,8 @@ export async function handleFileTool(
       const content = decodeContent(args.content as string);
       await fs.mkdir(path.dirname(filePath), { recursive: true });
       await fs.writeFile(filePath, content, "utf8");
+      const vp = await vaultPath(args.vaultName as string);
+      await syncVault(vp);
       return `Created: ${args.vaultName}/${args.fileName}`;
     }
 
@@ -340,12 +352,16 @@ export async function handleFileTool(
       const filePath = await resolveFilePath(args.vaultName as string, args.fileName as string);
       const content = decodeContent(args.content as string);
       await fs.writeFile(filePath, content, "utf8");
+      const vp = await vaultPath(args.vaultName as string);
+      await syncVault(vp);
       return `Edited: ${args.vaultName}/${args.fileName}`;
     }
 
     case "delete_file": {
       const filePath = await resolveFilePath(args.vaultName as string, args.fileName as string);
       await fs.rm(filePath, { recursive: true, force: true });
+      const vp = await vaultPath(args.vaultName as string);
+      await syncVault(vp);
       return `Deleted: ${args.vaultName}/${args.fileName}`;
     }
 
@@ -353,6 +369,8 @@ export async function handleFileTool(
       const src = await resolveFilePath(args.vaultName as string, args.source as string);
       const dest = await resolveFilePath(args.vaultName as string, args.destination as string);
       await fs.rename(src, dest);
+      const vp = await vaultPath(args.vaultName as string);
+      await syncVault(vp);
       return `Moved: ${args.vaultName}/${args.source} → ${args.vaultName}/${args.destination}`;
     }
 
@@ -361,12 +379,16 @@ export async function handleFileTool(
       const dest = await resolveFilePath(args.vaultName as string, args.destination as string);
       await fs.mkdir(path.dirname(dest), { recursive: true });
       await fs.copyFile(src, dest);
+      const vp = await vaultPath(args.vaultName as string);
+      await syncVault(vp);
       return `Copied: ${args.vaultName}/${args.source} → ${args.vaultName}/${args.destination}`;
     }
 
     case "make_folder": {
       const folderPath = await resolveFilePath(args.vaultName as string, args.folderName as string);
       await fs.mkdir(folderPath, { recursive: true });
+      const vp = await vaultPath(args.vaultName as string);
+      await syncVault(vp);
       return `Folder created: ${args.vaultName}/${args.folderName}`;
     }
 
